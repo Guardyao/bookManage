@@ -1,0 +1,41 @@
+package com.book.servlet.pages;
+
+import com.book.entity.Book;
+import com.book.entity.User;
+import com.book.service.BookService;
+import com.book.service.impl.BookServiceImpl;
+import com.book.utils.ThymeleafUtil;
+import org.thymeleaf.context.Context;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@WebServlet("/books")
+public class BookServlet extends HttpServlet {
+    BookService service;
+    @Override
+    public void init() throws ServletException {
+        service = new BookServiceImpl();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Content-type","text/html;charset=UTF-8");
+        Context context = new Context();
+        User user = (User) req.getSession().getAttribute("user");
+        context.setVariable("nickname",user.getNickname());
+        List<Book> books = service.getBookAll();
+        List<Book> books_Rent = service.getBookRent();
+        Map<Book,Boolean> map = service.getMapValue(books_Rent,books);
+        context.setVariable("book_list",map.keySet());
+        context.setVariable("book_list_status",new ArrayList<>(map.values()));
+        ThymeleafUtil.process("books.html",context,resp.getWriter());
+    }
+}
